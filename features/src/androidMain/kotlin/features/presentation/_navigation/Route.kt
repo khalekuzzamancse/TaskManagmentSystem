@@ -41,8 +41,11 @@ class NavigationViewModel() : ViewModel() {
 
     /** Set the bitmap before navigation, passing bitmap via navigation is
     complex that is why doing this ...**/
+    fun goToUpdate(id: String) {
+        pushIfNotExist(Route.Details(id))
+    }
     fun onSelect(destination: String) {
-        Logger.on(tag = "Route", "onSelected->else:$destination")
+        Logger.off(tag = "Route", "onSelected->else:$destination")
         when {
             Route.Home.route == destination -> {
                 pushIfNotExist(Route.Home)
@@ -55,7 +58,7 @@ class NavigationViewModel() : ViewModel() {
             }
 
             else -> {
-                Logger.on(tag = "Route", "onSelected->else:$destination")
+                Logger.off(tag = "Route", "onSelected->else:$destination")
             }
         }
 

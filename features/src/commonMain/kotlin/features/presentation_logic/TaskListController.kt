@@ -7,5 +7,6 @@ import kotlinx.coroutines.flow.StateFlow
 interface TaskListController: FeedbackController {
     val tasks: StateFlow<List<TaskModel>>
     fun read()
-    fun search(query: String)
+    fun delete(id: String)
+    fun search(query: String?)
 }

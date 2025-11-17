@@ -17,6 +17,7 @@ interface FeedbackController {
     fun clearMessage()
     fun startLoading()
     fun stopLoading()
+    fun proccessing(): Boolean
 }
 
 class FeedbackControllerImpl : FeedbackController {
@@ -54,6 +55,10 @@ class FeedbackControllerImpl : FeedbackController {
 
     override fun stopLoading() {
         isLoading.value = false
+    }
+
+    override fun proccessing(): Boolean {
+      return  isLoading.value
     }
 
 }

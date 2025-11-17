@@ -47,7 +47,7 @@ fun BottomBar(
     selectedRoute: BottomBarItem,
     onHomeClick: () -> Unit,
     onManualRequest: () -> Unit,
-    onRecognizeRequest: () -> Unit,
+    onCreateRequest: () -> Unit,
     onAboutUsRequest: () -> Unit,
     onAboutAppRequest: () -> Unit,
 ) {
@@ -115,7 +115,7 @@ fun NavRail(
     selectedRoute: BottomBarItem,
     onHomeClick: () -> Unit,
     onManualRequest: () -> Unit,
-    onRecognizeRequest: () -> Unit,
+    onCreateRequest: () -> Unit,
     onAboutUsRequest: () -> Unit,
     onAboutAppRequest: () -> Unit,
 ) {

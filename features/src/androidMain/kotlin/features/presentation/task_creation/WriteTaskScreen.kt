@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kzcse.hilsadetector.feature._core.presentation.AppTheme
 import core.ui.BackIcon
 import core.ui.ButtonView
@@ -31,17 +30,19 @@ import core.ui.TextHeading3
 import core.ui.screenPaddingAll
 import features.domain.PriorityModel
 import features.domain.StatusModel
-import features.presentation_logic.TaskCreateController
+import features.presentation_logic.TaskWriteController
 import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskCreationScreen(
+fun TaskWriteScreen(
     modifier: Modifier = Modifier,
-    onBack: () -> Unit = {}
+    viewModel: TaskWriteController,
+    screenTitle: String,
+    actionLabel: String,
+    onBack: () -> Unit,
 ) {
-    val viewModel = viewModel { TaskCreationViewModel() }
     val selectedStatus = viewModel.task.collectAsState().value.status.label
     val selectedPriority = viewModel.task.collectAsState().value.priority.label
     val title = viewModel.task.collectAsState().value.title
@@ -53,8 +54,8 @@ fun TaskCreationScreen(
         fab = {},
         bottomBar = {},
         navRail = {},
-        title={
-            TextHeading2(text = "Create New Task")
+        title = {
+            TextHeading2(text = screenTitle)
         },
         navigationIcon = {
             BackIcon(onClick = onBack)
@@ -82,18 +83,18 @@ fun TaskCreationScreen(
                 onOptionSelected = viewModel::onStatusChange
             )
             _SpacerSibling()
-            _DatePick()
+            _DatePick(controller = viewModel)
             _SpacerSibling()
             _DescriptionField(controller = viewModel)
             SpacerVertical(32)
             ButtonView(
-                label = "Create Task",
+                label = actionLabel,
                 disable = title.isBlank() || isLoading,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 focusManager.clearFocus()
                 scope.launch {
-                    viewModel.create()
+                   viewModel.write()
                 }
 
             }
@@ -105,7 +106,7 @@ fun TaskCreationScreen(
 @Composable
 fun _TitleInputFiled(
     modifier: Modifier = Modifier,
-    controller: TaskCreateController
+    controller: TaskWriteController
 ) {
     val title = controller.task.collectAsState().value.title
     TextHeading3(text = "Title")
@@ -121,7 +122,7 @@ fun _TitleInputFiled(
 @Composable
 fun _DescriptionField(
     modifier: Modifier = Modifier,
-    controller: TaskCreateController
+    controller: TaskWriteController
 ) {
     val description = controller.task.collectAsState().value.description
     TextHeading3(text = "Description")
@@ -137,13 +138,16 @@ fun _DescriptionField(
 
 
 @Composable
-fun _DatePick(modifier: Modifier = Modifier) {
+fun _DatePick(modifier: Modifier = Modifier,controller: TaskWriteController) {
+    val date= controller.task.collectAsState().value.dueDate
+
+
     TextHeading3(text = "Due Date")
     SpacerVertical(16)
     DatePickerView(
         modifier = modifier.fillMaxWidth(),
-        onDateSelected = {
-        }
+        initial = date,
+        onDateSelected = controller::onDueDateChange
     )
 }
 

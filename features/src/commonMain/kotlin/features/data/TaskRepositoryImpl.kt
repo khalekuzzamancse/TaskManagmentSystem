@@ -8,8 +8,6 @@ import features.domain.PriorityModel
 import features.domain.StatusModel
 import features.domain.TaskModel
 import features.domain.TaskRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 
 class TaskRepositoryImpl : TaskRepository {
     private val api = ApiFactory.createTaskApiOrThrow()
@@ -20,23 +18,19 @@ class TaskRepositoryImpl : TaskRepository {
         return api.readOrThrow(id)._toModel()
     }
 
-    override suspend fun observeTasks(): Flow<List<TaskModel>> {
-        return api.observeTasks().map { entities ->
-            entities.map { it._toModel() }
+    override suspend fun readTasksOrThrow(): List<TaskModel> {
+        return api.readTasksOrThrow().map {
+           it._toModel()
         }
     }
     override suspend fun updateOrThrow(model: TaskModel) {
-        api.updateOrThrow(
-            id = model.title,
-            description = model.description,
-            dueDate = model.dueDate,
-            priority = model.priority.ordinal,
-            status = model.status.ordinal
-        )
+        api.updateOrThrow(model._toEntity())
     }
 
     override suspend fun searchOrThrow(query: String): List<TaskModel> {
-        TODO("Not yet implemented")
+        return api.searchOrThrow(query).map {
+            it._toModel()
+        }
     }
 
     override suspend fun deleteOrThrow(id: String) {
@@ -49,7 +43,8 @@ class TaskRepositoryImpl : TaskRepository {
             dueDate = this.dueDate,
             priority = PriorityModel.entries[this.priority],
             status = StatusModel.entries[this.status],
-            createdOn = this.createdOn
+            createdOn = this.createdOn,
+            id = this.id
         )
     }
     private fun TaskModel._toEntity(): TaskEntity {

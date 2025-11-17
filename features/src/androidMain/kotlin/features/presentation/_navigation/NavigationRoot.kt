@@ -17,8 +17,9 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.kzcse.hilsadetector.feature._core.presentation.AppTheme
 import core.ui.ButtonView
-import features.presentation.TaskListScreen
 import features.presentation.task_creation.TaskCreationScreen
+import features.presentation.task_updation.TaskUpdateScreen
+import features.presentation.tasklist.TaskListScreen
 
 @Composable
 fun NavigationRoute() {
@@ -61,9 +62,9 @@ fun _NavigationRoot(
                     viewModel.onSelect(Route.Home.route)
                 },
                 onManualRequest = {
-                    viewModel.onSelect(Route.CreateTask.route)
+
                 },
-                onRecognizeRequest = {
+                onCreateRequest = {
 
                 },
                 onAboutUsRequest = {
@@ -85,7 +86,7 @@ fun _NavigationRoot(
                 onManualRequest = {
                     viewModel.onSelect(Route.CreateTask.route)
                 },
-                onRecognizeRequest = {
+                onCreateRequest = {
 
                 },
                 onAboutUsRequest = {
@@ -128,17 +129,22 @@ fun _NavigationRoot(
                        TaskListScreen(
                            bottomBar = bottomBar,
                            navRail = navRail,
-                           fab = fab
+                           fab = fab,
+                           onDetailsRequest = {
+                               viewModel.goToUpdate(it)
+                           }
                        )
                     }
                 }
-
+                is Route.Details ->{
+                    NavEntry(key) {
+                        TaskUpdateScreen(id = key.id, onBack =viewModel::onBack)
+                    }
+                }
                 is Route.CreateTask -> {
                     NavEntry(key) {
                         TaskCreationScreen(
-                            onBack = {
-                                viewModel.onBack()
-                            }
+                            onBack = viewModel::onBack
                         )
                     }
                 }

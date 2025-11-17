@@ -95,6 +95,7 @@ fun ScreenStrategy(
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScreenStrategy(
@@ -124,6 +125,66 @@ fun ScreenStrategy(
                             containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(16.dp)
                         )
                     )
+                }
+            },
+            bottomBar = {
+                if (!isWideScreen) {
+                    Box {
+                        bottomBar()
+                        if (isLoading) {
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .background(Color.Gray.copy(alpha = 0.95f))
+                            )
+                        }
+                    }
+                }
+            },
+            floatingActionButton = { fab() }
+        ) { innerPadding ->
+            Row(modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxHeight()
+            ) {
+                if (isWideScreen) {
+
+                    navRail?.invoke() // show navRail on wide screens
+                    SpacerHorizontal(4)
+                }
+                Content(modifier =Modifier
+                    .fillMaxSize()
+                    .weight(1f),
+                    content=content,
+                    isLoading=isLoading)
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ScreenStrategy(
+    modifier: Modifier = Modifier,
+    controller: FeedbackController? = null,
+    fab: @Composable () -> Unit = {},
+    bottomBar: @Composable () -> Unit,
+    topBar: (@Composable () -> Unit)? = null,
+    navRail: (@Composable () -> Unit)? = null, // new optional param
+    content: @Composable BoxScope.(Modifier) -> Unit
+) {
+    val isLoading = controller?.isLoading?.collectAsState()?.value ?: false
+    val hasTopBar = topBar != null
+
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val isWideScreen = maxWidth > 600.dp
+
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                if (hasTopBar) {
+                   topBar()
                 }
             },
             bottomBar = {

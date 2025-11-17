@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TaskDao {
@@ -16,7 +15,10 @@ interface TaskDao {
     @Query("DELETE FROM TaskSchema WHERE createdOn = :id")
     suspend fun deleteTaskById(id: Long)
     @Query("SELECT * FROM TaskSchema")
-     fun observerTasks(): Flow<List<TaskSchema>>
+    suspend fun readTasksOrThrow(): List<TaskSchema>
+    // Search for tasks by title (or other fields like description)
+    @Query("SELECT * FROM TaskSchema WHERE title LIKE :query")
+    suspend fun searchTasks(query: String): List<TaskSchema>
 }
 
 /**

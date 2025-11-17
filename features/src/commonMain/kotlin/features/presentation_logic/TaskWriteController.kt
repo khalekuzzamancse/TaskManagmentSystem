@@ -4,7 +4,7 @@ import core.logic.FeedbackController
 import features.domain.TaskModel
 import kotlinx.coroutines.flow.StateFlow
 
-interface TaskCreateController: FeedbackController {
+interface TaskWriteController: FeedbackController {
     val task: StateFlow<TaskModel>
     fun onTitleChange(value: String)
     fun onDescriptionChange(value: String)
@@ -15,5 +15,5 @@ interface TaskCreateController: FeedbackController {
      * @return true if the task was created successfully, false otherwise
      * If creation is failed will update the feedback message
      */
-    suspend fun create(): Boolean
+    suspend fun write(): Boolean
 }

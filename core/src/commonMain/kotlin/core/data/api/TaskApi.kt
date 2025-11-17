@@ -1,21 +1,17 @@
 package core.data.api
 
-import kotlinx.coroutines.flow.Flow
 /**
  * - id is createdOn
  */
 interface TaskApi {
     suspend fun createOrThrow(entity: TaskEntity)
     suspend  fun updateOrThrow(
-        id: String,
-        description: String?=null,
-        dueDate: Long?=null,
-        priority:Int??=null,
-        status: Int?=null
+        entity: TaskEntity
     )
     suspend fun readOrThrow(id: String): TaskEntity
     suspend fun deleteOrThrow(id: String)
-    suspend fun observeTasks(): Flow<List<TaskEntity>>
+    suspend fun readTasksOrThrow():List<TaskEntity>
+    suspend  fun searchOrThrow(query: String): List<TaskEntity>
 }
 data class TaskEntity(
     val title: String,

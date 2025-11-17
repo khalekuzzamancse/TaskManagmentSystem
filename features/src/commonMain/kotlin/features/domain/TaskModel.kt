@@ -7,4 +7,5 @@ data class TaskModel(
     val priority: PriorityModel,
     val status: StatusModel,
     val createdOn: Long,
+    val id: String
 )
