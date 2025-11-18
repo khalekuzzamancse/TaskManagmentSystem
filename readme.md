@@ -46,7 +46,7 @@ However, I tried to keep the codebase maintainable so that with minimal effort i
 ### Current Limitations
 
 * **Emulator Display:** In some emulators (e.g., macOS Android Emulator), the **shadows for dialogs and bottom sheets** may not display correctly, though they work fine on physical devices.
-* **iOS Target Missing:** Direct currency functionality is currently **missing** in the planned iOS app, as the native iOS UI is not yet ready. This is planned for a future update.
+* **iOS Target Missing:** iOS app target directory  **missing**, as the native iOS UI is not yet ready. This is planned for a future update.
 
 ---
 
@@ -60,7 +60,7 @@ However, I tried to keep the codebase maintainable so that with minimal effort i
 | **Shared Logic** | **KMM/KMP** | Used exclusively for **shared business logic**. The core data, domain, and UI-independent layers reside in `src/commonMain`. |
 | **Android UI** | **Jetpack Compose** | Utilized for the **Android target only** to simulate a native Android UI behavior (as per requirement). UI code is isolated in `src/androidMain`. |
 | **iOS UI** | **SwiftUI (Planned)** | **No iOS UI is currently present**. Planning to use native SwiftUI in the near future. |
-| **Local Persistence** | **Room KMP** | Employed for reliable and local data persistence across platforms. |
+| **Local Persistence** | **Room KMP** | for local data persistence across platforms. |
 | **Date Operations** | **Kotlinx-DateTime** | Used for all date-related operations due to its compatibility across JVM and non-JVM targets (like iOS), where standard Java time APIs are incompatible. |
 | **Project Structure** | **Convention Plugins** | Used in the multi-module setup to remove redundancy and simplify dependency management. |
 | **Architecture** | **Clean Architecture based** | The project is structured based on concepts near to or inspired by Clean Architecture for maintainability and separation of concerns. |
