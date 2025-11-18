@@ -1,3 +1,4 @@
+
 # 📝 Task Master App
 
 A cross-platform task management application built with **Kotlin Multiplatform (KMP)** for shared business logic, currently focusing on a native **Android** UI experience.
@@ -9,10 +10,10 @@ However, I tried to keep the codebase maintainable so that with minimal effort i
 * [✨ Features](#-features)
 * [🔗 App Links](#-app-links)
 * [📖 User Manual & Known Issues](#-user-manual--known-issues)
-    * [How to Use](#how-to-use)
-    * [Current Limitations](#current-limitations)
+  * [How to Use](#how-to-use)
+  * [Current Limitations](#current-limitations)
 * [💻 Technical Details](#-technical-details)
-    * [Architecture & Tech Stack](#architecture--tech-stack)
+  * [Architecture & Tech Stack](#architecture--tech-stack)
 * [📸 Screenshots](#-screenshots)
 
 ---
@@ -30,7 +31,7 @@ However, I tried to keep the codebase maintainable so that with minimal effort i
 | Description       | Link                            |
 |:------------------|:--------------------------------|
 | **Video Preview** | \[https://youtu.be/gZka3n9K2rY] |
-| **APK Download**  | \[ ]                     |
+| **APK Download**  | \[download the `android-release.apk`from this current directory]                     |
 | **Latest Code and App**   | \[ checkout to the `dev` branch]  |
 
 ---
@@ -65,26 +66,26 @@ However, I tried to keep the codebase maintainable so that with minimal effort i
 | **Architecture** | **Clean Architecture based** | The project is structured based on concepts near to or inspired by Clean Architecture for maintainability and separation of concerns. |
 
 ---
-
 ## 📸 Screenshots
 
-A visual representation of the app's various screens:
+### **List Screen**
+<img src="-docs/task_list_1.png" alt="Task List Screen" width="30%" />
 
-* **List Screen**
-![TaskListScreen](-docs/task_list_1.png)
+### **Task Search**
+<img src="-docs/task_search.png" alt="Task Search" width="30%" />
 
-* **Task Search** 
-![TaskListScreen](-docs/task_search.png)
-* **Task Filter**
-![TaskListScreen](-docs/task_filter_1.png)
-![TaskListScreen](-docs/task_filter_2.png)
-![TaskListScreen](-docs/date_picker.png)
+### **Task Filter**
+<img src="-docs/task_filter_1.png" alt="Task Filter 1" width="30%" />
+<img src="-docs/task_filter_2.png" alt="Task Filter 2" width="30%" />
+<img src="-docs/date_picker.png" alt="Date Picker" width="30%" />
 
-* **Task Sort**
-![TaskListScreen](-docs/task_sort.png)
+### **Task Sort**
+<img src="-docs/task_sort.png" alt="Task Sort" width="30%" />
 
-**Task Create Screen**
-![TaskCreateScreen](-docs/create_task_1.png)
-![TaskCreateScreen](-docs/create_task_2.png)
-**Task Update Screen**
-![TaskUpadateScreen](-docs/update_task.png)
+### **Task Create Screen**
+<img src="-docs/create_task_1.png" alt="Create Task 1" width="30%" />
+<img src="-docs/create_task_2.png" alt="Create Task 2" width="30%" />
+
+### **Task Update Screen**
+<img src="-docs/update_task.png" alt="Update Task" width="30%" />
+
