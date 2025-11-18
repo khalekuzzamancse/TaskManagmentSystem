@@ -1,9 +1,11 @@
+@file:Suppress("ComposableNaming")
+
 package features.presentation._navigation
 
 import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
@@ -15,18 +17,15 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
-import com.kzcse.hilsadetector.feature._core.presentation.AppTheme
 import core.ui.ButtonView
+import features.presentation.misc.AboutUsScreen
 import features.presentation.task_creation.TaskCreationScreen
 import features.presentation.task_updation.TaskUpdateScreen
 import features.presentation.tasklist.TaskListScreen
 
 @Composable
 fun NavigationRoute() {
-    AppTheme {
-        _NavigationRoot()
-    }
-
+    _NavigationRoot()
 }
 
 @Composable
@@ -53,7 +52,7 @@ fun _NavigationRoot(
 
     }
 
-    val navRail: @Composable ()->Unit=remember(selected) {
+    val navRail: @Composable () -> Unit = remember(selected) {
         {
             NavRail(
                 modifier = Modifier,
@@ -61,50 +60,38 @@ fun _NavigationRoot(
                 onHomeClick = {
                     viewModel.onSelect(Route.Home.route)
                 },
-                onManualRequest = {
-
-                },
                 onCreateRequest = {
 
                 },
                 onAboutUsRequest = {
-
+                    viewModel.onSelect(Route.AboutUs.route)
                 },
-                onAboutAppRequest = {
-
-                }
             )
         }
     }
-    val bottomBar:  @Composable ()->Unit = remember(selected) {
+    val bottomBar: @Composable () -> Unit = remember(selected) {
         {
             BottomBar(
                 selectedRoute = selected,
                 onHomeClick = {
                     viewModel.onSelect(Route.Home.route)
                 },
-                onManualRequest = {
-                    viewModel.onSelect(Route.CreateTask.route)
-                },
                 onCreateRequest = {
 
                 },
                 onAboutUsRequest = {
-
+                    viewModel.goToAboutUs()
                 },
-                onAboutAppRequest = {
 
-                }
-            )
+                )
         }
     }
-    val fab:  @Composable ()->Unit = remember {
+    val fab: @Composable () -> Unit = remember {
         @Composable {
-
             ButtonView(
                 modifier = Modifier,
                 label = "Create Task",
-                icon = Icons.Default.CameraAlt
+                icon = Icons.Default.Add
             ) {
                 viewModel.onSelect(Route.CreateTask.route)
             }
@@ -126,21 +113,23 @@ fun _NavigationRoot(
             when (key) {
                 is Route.Home -> {
                     NavEntry(key) {
-                       TaskListScreen(
-                           bottomBar = bottomBar,
-                           navRail = navRail,
-                           fab = fab,
-                           onDetailsRequest = {
-                               viewModel.goToUpdate(it)
-                           }
-                       )
+                        TaskListScreen(
+                            bottomBar = bottomBar,
+                            navRail = navRail,
+                            fab = fab,
+                            onDetailsRequest = {
+                                viewModel.goToUpdate(it)
+                            }
+                        )
                     }
                 }
-                is Route.Details ->{
+
+                is Route.Details -> {
                     NavEntry(key) {
-                        TaskUpdateScreen(id = key.id, onBack =viewModel::onBack)
+                        TaskUpdateScreen(id = key.id, onBack = viewModel::onBack)
                     }
                 }
+
                 is Route.CreateTask -> {
                     NavEntry(key) {
                         TaskCreationScreen(
@@ -148,6 +137,17 @@ fun _NavigationRoot(
                         )
                     }
                 }
+
+                Route.AboutUs -> {
+                    NavEntry(key) {
+                        AboutUsScreen(
+                            fab = {},
+                            bottomBar = bottomBar,
+                            navRail = navRail
+                        )
+                    }
+                }
+
                 else -> throw kotlin.RuntimeException("Invalid root")
             }
         }

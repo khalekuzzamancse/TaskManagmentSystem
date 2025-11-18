@@ -26,10 +26,6 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
-//            proguardFiles(
-//                getDefaultProguardFile("proguard-android-optimize.txt"),
-//                "proguard-rules.pro"
-//            )
         }
     }
     compileOptions {
@@ -56,7 +52,6 @@ android {
 
 dependencies {
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.core.splashscreen)
     implementation(projects.features)
     implementation(projects.core)
 }

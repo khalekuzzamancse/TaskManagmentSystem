@@ -26,9 +26,13 @@ sealed interface Route {
     data object CreateTask : NavKey, Route, NonTopRoute {
         override val route = "CreateTask"
     }
+    @Serializable
+    data object  AboutUs: NavKey, Route, TopRoute {
+        override val route = "AboutUs"
+    }
 
     @Serializable
-    data class Details (val id: String): NavKey, Route, TopRoute {
+    data class Details (val id: String): NavKey, Route, NonTopRoute {
         override val route = "Details"
     }
 
@@ -44,6 +48,10 @@ class NavigationViewModel() : ViewModel() {
     fun goToUpdate(id: String) {
         pushIfNotExist(Route.Details(id))
     }
+    fun goToAboutUs(){
+        pushIfNotExist(Route.AboutUs)
+        onSelect(Route.AboutUs.route)
+    }
     fun onSelect(destination: String) {
         Logger.off(tag = "Route", "onSelected->else:$destination")
         when {
@@ -55,6 +63,10 @@ class NavigationViewModel() : ViewModel() {
             Route.CreateTask.route == destination -> {
                 pushIfNotExist(Route.CreateTask)
                 _selected.update { BottomBarItem.Create }
+            }
+            Route.AboutUs.route == destination -> {
+                pushIfNotExist(Route.AboutUs)
+                _selected.update { BottomBarItem.AboutUs }
             }
 
             else -> {
@@ -76,7 +88,7 @@ class NavigationViewModel() : ViewModel() {
         if (peek != null) {
             when (peek) {
                 Route.Home -> _selected.update { BottomBarItem.Home }
-                is Route.Details -> _selected.update { BottomBarItem.UserManual }
+                Route.AboutUs -> _selected.update { BottomBarItem.AboutUs }
             }
         }
 

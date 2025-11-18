@@ -18,7 +18,9 @@ interface TaskDao {
     @Query("SELECT * FROM TaskSchema")
     suspend fun readTasksOrThrow(): List<TaskSchema>
     // Search for tasks by title (or other fields like description)
-    @Query("SELECT * FROM TaskSchema WHERE title LIKE :query")
+//    @Query("SELECT * FROM TaskSchema WHERE title LIKE :query")
+//    suspend fun searchTasks(query: String): List<TaskSchema>
+    @Query("SELECT * FROM TaskSchema WHERE title LIKE :query COLLATE NOCASE")
     suspend fun searchTasks(query: String): List<TaskSchema>
 
     @Query("SELECT * FROM TaskSchema WHERE status = :status")

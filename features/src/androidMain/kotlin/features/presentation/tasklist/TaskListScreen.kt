@@ -1,10 +1,12 @@
 @file:Suppress("ComposableNaming")
+
 package features.presentation.tasklist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Timer
@@ -33,7 +36,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,9 +54,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import core.ui.DateRangeFilter
 import core.ui.DateTimeUtils
 import core.ui.DividerHorizontal
-import core.ui.FilterBottomSheetViewOption
+import core.ui.FilterControlView
 import core.ui.FilterView
-import core.ui.FilterViewController
 import core.ui.IconButtonView
 import core.ui.NoDataView
 import core.ui.ScreenStrategy
@@ -66,24 +68,16 @@ import features.domain.PriorityModel
 import features.domain.StatusModel
 import features.domain.TaskModel
 import features.presentation_logic.TaskListController
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskListScreen(
-    modifier: Modifier = Modifier,
     bottomBar: @Composable () -> Unit,
     navRail: @Composable () -> Unit,
     fab: @Composable () -> Unit,
     onDetailsRequest: (String) -> Unit,
 ) {
-
     val viewModel = viewModel { TaskListViewModel() }
-    LaunchedEffect(Unit) {
-        viewModel.read()
-    }
     val tasks = viewModel.tasks.collectAsState().value
     var showDialog by remember { mutableStateOf(false) }
     var selectedTask by remember { mutableStateOf<TaskModel?>(null) }
@@ -105,13 +99,19 @@ fun TaskListScreen(
         ModalBottomSheet(
             onDismissRequest = {
                 showBottomSheet = false
+                viewModel.clearFilter(false)
             },
             sheetState = sheetState
         ) {
             _FilterView(
-                taskController = viewModel,
+                controller = viewModel,
                 onApplyRequested = {
-                    showBottomSheet=false
+                    viewModel.filter()
+                    showBottomSheet = false
+                },
+                onResetRequest = {
+                    viewModel.clearFilter(true)
+                    showBottomSheet = false
                 }
             )
         }
@@ -133,7 +133,7 @@ fun TaskListScreen(
                         icon = Icons.Outlined.Refresh,
                         tint = MaterialTheme.colorScheme.primary
                     ) {
-                       viewModel.read()
+                        viewModel.read()
                     }
                     IconButtonView(
                         icon = Icons.Outlined.FilterAlt,
@@ -145,26 +145,25 @@ fun TaskListScreen(
                     _SortDropDownMenu(
                         onPrioritySortRequest = viewModel::sortByPriority,
                         onDateSortRequest = viewModel::sortByDate,
-                        onStatusSortRequest = viewModel::sortByStatus
+                        onStatusSortRequest = viewModel::sortByStatus,
+                        controller = viewModel
                     )
                 }
             )
         }
 
     ) { modifier ->
-        Column(modifier=modifier) {
+        Column(modifier = modifier) {
             SearchBar(
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 onSearch = { query ->
                     viewModel.search(query)
-
                 }
             )
             SpacerVertical(16)
             DividerHorizontal()
-            SpacerVertical(8)
             if (tasks.isEmpty() && !isLoading) {
                 NoDataView()
             } else {
@@ -214,7 +213,11 @@ fun TaskScreen(
     onDetailsRequest: (String) -> Unit,
     onLongClick: (TaskModel) -> Unit
 ) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = 8.dp)
+    ) {
+
         items(tasks.size) { index ->
             TaskItem(
                 task = tasks[index],
@@ -225,7 +228,7 @@ fun TaskScreen(
                     onLongClick(tasks[index])
                 }
             )
-            if(index!=tasks.lastIndex){
+            if (index != tasks.lastIndex) {
                 SpacerVertical(4)
                 DividerHorizontal(modifier = Modifier.padding(horizontal = 16.dp))
                 SpacerVertical(8)
@@ -258,18 +261,18 @@ fun TaskItem(task: TaskModel, onClick: () -> Unit, onLongClick: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(4.dp))
-            Row (
+            Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
-            ){
-                if(task.dueDate!=null){
+            ) {
+                if (task.dueDate != null) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Timer,
                             contentDescription = "Due Date",
-                            tint =Color.Gray,
+                            tint = Color.Gray,
                             modifier = Modifier.size(20.dp)
                         )
                         SpacerHorizontal(4)
@@ -284,10 +287,10 @@ fun TaskItem(task: TaskModel, onClick: () -> Unit, onLongClick: () -> Unit) {
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = task.status.label,
-                    color = when(task.status){
-                        StatusModel.TODO->Color(0xFFFF0000)
-                        StatusModel.InProgress->Color(0xFFFFC107)
-                        StatusModel.DONE->Color(0xFF43A047)
+                    color = when (task.status) {
+                        StatusModel.TODO -> Color(0xFFFF0000)
+                        StatusModel.InProgress -> Color(0xFFFFC107)
+                        StatusModel.DONE -> Color(0xFF43A047)
                     },
                     modifier = Modifier
                 )
@@ -301,12 +304,8 @@ fun TaskItem(task: TaskModel, onClick: () -> Unit, onLongClick: () -> Unit) {
 
 @Composable
 fun StatusIcon(status: PriorityModel) {
-    val primary= MaterialTheme.colorScheme.primary
-    val color =when(status){
-        PriorityModel.LOW->primary.copy(alpha = 0.3f)
-        PriorityModel.MEDIUM->primary.copy(alpha = 0.6f)
-        PriorityModel.HIGH->primary.copy(alpha = 0.8f)
-    }
+    val primary = MaterialTheme.colorScheme.primary
+    val color = primary.copy(alpha = 0.6f)
 
     Box(
         modifier = Modifier
@@ -315,10 +314,10 @@ fun StatusIcon(status: PriorityModel) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = when(status){
-                PriorityModel.LOW->"L"
-                PriorityModel.MEDIUM->"M"
-                PriorityModel.HIGH->"H"
+            text = when (status) {
+                PriorityModel.LOW -> "L"
+                PriorityModel.MEDIUM -> "M"
+                PriorityModel.HIGH -> "H"
             },
             color = Color.White,
             fontSize = 20.sp
@@ -326,18 +325,16 @@ fun StatusIcon(status: PriorityModel) {
     }
 }
 
-fun formatTime(timestamp: Long): String {
-    val sdf = SimpleDateFormat("hh:mm a", Locale.getDefault())
-    return sdf.format(Date(timestamp))
-}
 
 @Composable
 fun _SortDropDownMenu(
-    onPrioritySortRequest:()-> Unit,
-    onDateSortRequest:()-> Unit,
-    onStatusSortRequest:()-> Unit,
+    controller: TaskListController,
+    onPrioritySortRequest: () -> Unit,
+    onDateSortRequest: () -> Unit,
+    onStatusSortRequest: () -> Unit,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
+    val selected = controller.selectedSortOption.collectAsState().value
     Box(
         modifier = Modifier
             .padding(16.dp)
@@ -354,31 +351,53 @@ fun _SortDropDownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            Column (
+            Column(
                 modifier = Modifier.padding(8.dp)
-            ){
-                Text(text = "Sort By", fontSize = 16.sp)
+            ) {
+                Row (
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+
+                ){
+                    Text(text = "Sort By", fontSize = 16.sp)
+                    IconButton(
+                        onClick = {
+                            controller.clearSort()
+                            expanded=false
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Clear,
+                            contentDescription = "Clear",
+                        )
+                    }
+                }
+
                 SpacerVertical(4)
                 DividerHorizontal()
-                DropdownMenuItem(
-                    text = { Text("Priority") },
+                _DropDownItem(
+                    label = "Priority",
+                    selected = selected == 1,
                     onClick = {
                         onPrioritySortRequest()
-                        expanded=false
+                        expanded = false
                     }
+
                 )
-                DropdownMenuItem(
-                    text = { Text("Status") },
+                _DropDownItem(
+                    label = "Status",
+                    selected = selected == 2,
                     onClick = {
                         onStatusSortRequest()
-                        expanded=false
+                        expanded = false
                     }
-                )
-                DropdownMenuItem(
-                    text = { Text("Due Date") },
+                    )
+                _DropDownItem(
+                    label = "Date",
+                    selected = selected == 3,
                     onClick = {
                         onDateSortRequest()
-                        expanded=false
+                        expanded = false
                     }
                 )
             }
@@ -388,21 +407,41 @@ fun _SortDropDownMenu(
     }
 }
 
+@Composable
+fun _DropDownItem(
+    modifier: Modifier = Modifier,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    DropdownMenuItem(
+        modifier = modifier,
+        text = {
+            Text(
+              text=  label,
+                fontWeight = if(selected) FontWeight.W700 else FontWeight.W400
+            )
+        },
+        onClick =onClick
+    )
+
+}
+
 @Preview(showBackground = true)
 @Composable
 fun TaskScreenPreview() {
-        val task=TaskModel(
-            "UI Design",
-            "Designing UI for new app",
-            1636048511000,
-            PriorityModel.LOW,
-            StatusModel.TODO,
-            System.currentTimeMillis(),
-            "4"
-        )
+    val task = TaskModel(
+        "UI Design",
+        "Designing UI for new app",
+        1636048511000,
+        PriorityModel.LOW,
+        StatusModel.TODO,
+        System.currentTimeMillis(),
+        "4"
+    )
 
     TaskItem(
-        task=task,
+        task = task,
         onClick = {},
         onLongClick = {}
     )
@@ -412,57 +451,54 @@ fun TaskScreenPreview() {
 @Composable
 fun _FilterView(
     modifier: Modifier = Modifier,
-    taskController: TaskListController,
+    controller: TaskListController,
     onApplyRequested: () -> Unit,
+    onResetRequest: () -> Unit,
 ) {
-    val controller = remember {
-        FilterViewController.create(
-            listOf(
-                FilterBottomSheetViewOption(
-                    groupName = "Status",
-                    options = StatusModel.entries.map { it.label },
-                ),
-                FilterBottomSheetViewOption(
-                    groupName = "Priority",
-                    options = PriorityModel.entries.map { it.label },
-                ),
-            )
-        )
-    }
+
+    val statusOptions = controller.statusOptions
+    val priorityOptions = controller.priorityOptions
+    val selectedStatus = controller.selectedStatus.collectAsState().value
+    val selectedPriority = controller.selectedPriority.collectAsState().value
+    val selectedDateRange = controller.selectedDateRange.collectAsState().value
+
     Column(modifier = modifier) {
-        var selectedRange by remember {
-            mutableStateOf<Pair<Long?, Long?>>(null to null)
-        }
+        FilterControlView(
+            modifier = Modifier,
+            onResetRequest = onResetRequest,
+            onApplyRequest = onApplyRequested
+        )
         FilterView(
             modifier = Modifier,
-            controller = controller,
-            onResetRequest = {
-                controller.reset()
-                selectedRange = (null to null)
+            name = "Status",
+            options = statusOptions,
+            selected = selectedStatus?.label,
+            onSelected = {
+                controller.onStatusSelected(StatusModel.toStatusOrThrow(it))
             },
-            onApplyRequest = {
-
-                taskController.filter(
-                    status = controller.selectedByGroup.value["Status"],
-                    priority = controller.selectedByGroup.value["Priority"],
-                    dateRange = selectedRange
-                )
-                onApplyRequested()
+            groupText = { modifier, group ->
+                TextHeading3(text = group, modifier = modifier.padding(start = 16.dp))
+            }
+        )
+        FilterView(
+            modifier = Modifier,
+            name = "Priority",
+            options = priorityOptions,
+            selected = selectedPriority?.label,
+            onSelected = {
+                controller.onPrioritySelected(PriorityModel.toPriorityOrThrow(it))
             },
             groupText = { modifier, group ->
                 TextHeading3(text = group, modifier = modifier.padding(start = 16.dp))
             }
         )
         SpacerVertical(16)
-        Column {
-            TextHeading3(text = "Date Range", modifier = Modifier.padding(start = 16.dp))
-            DateRangeFilter(
-                modifier = Modifier.padding(start = 16.dp),
-                selectedRange = selectedRange,
-                onSelection = {
-                    selectedRange = it
-                }
-            )
-        }
+        SpacerVertical(16)
+        TextHeading3(text = "Date Range", modifier = Modifier.padding(start = 16.dp))
+        DateRangeFilter(
+            modifier = Modifier.padding(start = 16.dp),
+            selectedRange = selectedDateRange,
+            onSelection = controller::onDateRangeSelected
+        )
     }
 }

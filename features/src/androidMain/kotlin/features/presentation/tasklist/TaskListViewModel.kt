@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package features.presentation.tasklist
 
 import androidx.lifecycle.ViewModel
@@ -11,141 +13,127 @@ import features.domain.StatusModel
 import features.domain.TaskModel
 import features.presentation_logic.TaskListController
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class TaskListViewModel : ViewModel(), TaskListController,
     FeedbackController by FeedbackControllerImpl() {
     private val repository = TaskRepositoryImpl.create()
     override val tasks = MutableStateFlow<List<TaskModel>>(emptyList())
+    override val selectedStatus = MutableStateFlow<StatusModel?>(null)
+    override val selectedPriority = MutableStateFlow<PriorityModel?>(null)
+    override val selectedDateRange = MutableStateFlow(Pair<Long?, Long?>(null, null))
+    override val statusOptions = StatusModel.entries.map { it.label }
+    override val priorityOptions = PriorityModel.entries.map { it.label }
+    override fun onPrioritySelected(priority: PriorityModel) = selectedPriority.update { priority }
+    override fun onStatusSelected(status: StatusModel) = selectedStatus.update { status }
+    override fun onDateRangeSelected(dateRange: Pair<Long?, Long?>) =
+        selectedDateRange.update { dateRange }
+
+    override fun clearFilter(reload: Boolean) {
+        selectedStatus.value = null
+        selectedPriority.value = null
+        selectedDateRange.value = Pair(null, null)
+        if(reload) read()
+  
+    }
+
+    override val selectedSortOption = MutableStateFlow<Int?>(null)
     private val tag = "TaskListViewModel"
-//    init {
-//        viewModelScope.launch {
-//            TestTasks.tasks.forEach {
-//                repository.createOrThrow(it)
-//            }
-//
-//        }
-//    }
+
     override fun read() {
-        viewModelScope.launch {
-            try {
-                startLoading()
-                tasks.value = repository.readTasksOrThrow()
-            } catch (e: Exception) {
-
-            } finally {
-                stopLoading()
-            }
-
+        executeStrategy {
+            tasks.value = repository.readTasksOrThrow().sortedByDescending { it.createdOn }
         }
     }
 
     override fun delete(id: String) {
-        //Write operation, cancel if already processing
-        if (proccessing()) {
-            updateMessage("Already processing, try again later")
-        }
-        viewModelScope.launch {
-            try {
-                startLoading()
-                repository.deleteOrThrow(id)
-                read()
-            } catch (e: Exception) {
-
-            } finally {
-                stopLoading()
-            }
-
+        executeStrategy {
+            repository.deleteOrThrow(id)
+            read()
         }
     }
 
     override fun search(query: String?) {
-        if (proccessing()) {
-            updateMessage("Already processing, try again later")
-            return
-        }
-        if (query.isNullOrEmpty()) {
-            read()
-            return
-        }
-        viewModelScope.launch {
-            try {
-                startLoading()
-                tasks.value=repository.searchOrThrow(query)
-            } catch (e: Exception) {
-
-            } finally {
-                stopLoading()
+        executeStrategy {
+            if (query.isNullOrEmpty()) read()
+            else {
+                tasks.value = repository.searchOrThrow(query)
             }
-
         }
     }
-    override fun filter(
-        status: String?,
-        priority: String?,
-        dateRange: Pair<Long?, Long?>
-    ) {
-        Logger.on(tag,"FiflterData:$status, $priority, $dateRange")
 
-        viewModelScope.launch {
-            try {
-                startLoading()
-                tasks.value=repository.filterOrThrow(
-                    status = status?.let { StatusModel.toStatusOrThrow(it) },
-                    priority = priority?.let { PriorityModel.toPriorityOrThrow(it)},
-                    dateRange = dateRange
-                )
-                Logger.on(tag,"filter: $status, $priority, $dateRange")
-            } catch (e: Throwable) {
-                Logger.on(tag,"filter: $e")
-            } finally {
-                stopLoading()
-            }
-
+    override fun filter() {
+//        Logger.off(tag, "FilterData:$status, $priority, $dateRange")
+        executeStrategy {
+            tasks.value = repository.filterOrThrow(
+                status = selectedStatus.value,
+                priority = selectedPriority.value,
+                dateRange = selectedDateRange.value
+            )
         }
     }
 
     override fun sortByPriority() {
-        viewModelScope.launch {
-            try {
-                startLoading()
-                tasks.value=repository.prioritySortOrThrow()
-            } catch (e: Throwable) {
-                Logger.on(tag,"filter: $e")
-            } finally {
-                stopLoading()
-            }
+        selectedSortOption.value = 1
+        executeStrategy(debugMsg = "sortByPriority") {
+            tasks.value = repository.prioritySortOrThrow()
         }
 
     }
 
     override fun sortByStatus() {
-        viewModelScope.launch {
-            try {
-                startLoading()
-                tasks.value=repository.byStatusSortOrThrow()
-            } catch (e: Throwable) {
-                Logger.on(tag,"filter: $e")
-            } finally {
-                stopLoading()
-            }
+        selectedSortOption.value = 2
+        executeStrategy(debugMsg = "sortByStatus") {
+            tasks.value = repository.byStatusSortOrThrow()
         }
     }
 
     override fun sortByDate() {
+        selectedSortOption.value = 3
+        executeStrategy(debugMsg = "sortByDate") {
+            tasks.value = repository.byDateSortOrThrow()
+        }
+    }
+
+
+    override fun clearSort() {
+        val shouldRead = selectedSortOption.value != null
+        selectedSortOption.value = null
+        if(shouldRead)
+            read()
+
+    }
+
+    private fun executeStrategy(
+        debugMsg: String = "",
+        executeOrThrow: suspend () -> Unit
+    ) {
+
         viewModelScope.launch {
             try {
                 startLoading()
-                tasks.value=repository.byDateSortOrThrow()
+                executeOrThrow()
             } catch (e: Throwable) {
-                Logger.on(tag,"filter: $e")
+                onException(e)
+                Logger.on(tag, "$debugMsg: $e")
             } finally {
                 stopLoading()
             }
         }
     }
-}
 
+    init {
+        read()
+    }
+//    init {
+//        TestTasks.tasks.forEach {
+//            viewModelScope.launch {
+//                repository.createOrThrow(it)
+//            }
+//        }
+//    }
+}
 
 //Just for quick UI test
 object TestTasks {

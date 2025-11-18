@@ -6,6 +6,7 @@ import core.data.api.TaskEntity
 import core.data.room.TaskDao
 import core.data.room.TaskSchema
 import core.language.CustomException
+import core.language.Logger
 import core.language.toDateString
 import kotlinx.coroutines.delay
 
@@ -68,9 +69,10 @@ class TaskLocalDataSrc(private val dao: TaskDao) : TaskApi{
     }
 
     override suspend fun searchOrThrow(query: String): List<TaskEntity> {
+        Logger.on(tag = "TaskLocalDataSrc","searchOrThrow:$query")
         //Fake loading
         delay(300)
-        return dao.searchTasks(query).map {
+        return dao.searchTasks("%$query%").map {
             it._toEntity()
         }
     }

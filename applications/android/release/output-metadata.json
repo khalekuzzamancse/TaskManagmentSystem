@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.khalekuzzaman.just.cse.algorithms_simulator",
+  "applicationId": "kzcs.taskmanagment",
   "variantName": "release",
   "elements": [
     {

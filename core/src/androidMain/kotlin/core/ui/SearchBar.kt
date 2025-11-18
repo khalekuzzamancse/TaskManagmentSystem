@@ -44,7 +44,7 @@ import kotlinx.coroutines.delay
     var debounceText by rememberSaveable { mutableStateOf("") }
     val color= Color(0xFFF6F6F6)
     LaunchedEffect(debounceText) {
-        delay(500)
+        delay(1000)
         val query= debounceText.ifEmpty { null }
         onSearch(query)
       focusManager.clearFocus()

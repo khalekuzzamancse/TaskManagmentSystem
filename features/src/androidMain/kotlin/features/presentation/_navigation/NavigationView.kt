@@ -18,9 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.PermDeviceInformation
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,15 +39,17 @@ import core.ui.SpacerHorizontal
 import core.ui.SpacerVertical
 
 
+enum class BottomBarItem {
+    Home, UserManual, Create, AboutUs, AboutApp
+}
+
 @Composable
 fun BottomBar(
     modifier: Modifier = Modifier,
     selectedRoute: BottomBarItem,
     onHomeClick: () -> Unit,
-    onManualRequest: () -> Unit,
     onCreateRequest: () -> Unit,
     onAboutUsRequest: () -> Unit,
-    onAboutAppRequest: () -> Unit,
 ) {
 
     Surface(
@@ -75,26 +75,6 @@ fun BottomBar(
             )
             BarItem(
                 modifier=Modifier,
-                outlinedIcon = Icons.Outlined.Book,
-                onClick = onManualRequest,
-                selected = selectedRoute == BottomBarItem.UserManual,
-                label = "Manual",
-                onPositioned = {
-
-                }
-            )
-            BarItem(
-                modifier=Modifier,
-                outlinedIcon = Icons.Outlined.PermDeviceInformation,
-                onClick = onAboutAppRequest,
-                selected = selectedRoute == BottomBarItem.AboutApp,
-                label = "About App",
-                onPositioned = {
-
-                }
-            )
-            BarItem(
-                modifier=Modifier,
                 outlinedIcon = Icons.Outlined.Person,
                 onClick = onAboutUsRequest,
                 selected = selectedRoute == BottomBarItem.AboutUs,
@@ -114,10 +94,8 @@ fun NavRail(
     modifier: Modifier = Modifier,
     selectedRoute: BottomBarItem,
     onHomeClick: () -> Unit,
-    onManualRequest: () -> Unit,
     onCreateRequest: () -> Unit,
     onAboutUsRequest: () -> Unit,
-    onAboutAppRequest: () -> Unit,
 ) {
     Surface(
         shadowElevation = 16.dp,
@@ -138,28 +116,6 @@ fun NavRail(
                 selected = selectedRoute == BottomBarItem.Home,
                 label = "Home",
                 onPositioned = {}
-            )
-            SpacerVertical(32)
-            NavRailItem(
-                modifier=Modifier.fillMaxWidth(),
-                icon = Icons.Outlined.Book,
-                onClick = onManualRequest,
-                selected = selectedRoute == BottomBarItem.UserManual,
-                label = "Manual",
-                onPositioned = {
-
-                }
-            )
-            SpacerVertical(32)
-            NavRailItem(
-                modifier=Modifier.fillMaxWidth(),
-                icon = Icons.Outlined.PermDeviceInformation,
-                onClick = onAboutAppRequest,
-                selected = selectedRoute == BottomBarItem.AboutApp,
-                label = "About App",
-                onPositioned = {
-
-                }
             )
             SpacerVertical(32)
             NavRailItem(

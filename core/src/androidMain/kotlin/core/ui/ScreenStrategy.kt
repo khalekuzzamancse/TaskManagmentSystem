@@ -12,13 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -110,20 +107,27 @@ fun ScreenStrategy(
 ) {
     val isLoading = controller?.isLoading?.collectAsState()?.value ?: false
     val hasTopBar = title != null || navigationIcon != null
-
+    val hostState = remember { SnackbarHostState() }
+    LaunchedEffect(Unit) {
+        controller?.messageToUi?.collect { msg ->
+            if (msg != null) {
+                hostState.showSnackbar(msg)
+            }
+        }
+    }
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val isWideScreen = maxWidth > 600.dp
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
+            snackbarHost = {
+                SnackbarHost(hostState = hostState)
+            },
             topBar = {
                 if (hasTopBar) {
                     TopAppBar(
                         title = { title?.invoke() },
                         navigationIcon = { navigationIcon?.invoke() },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(16.dp)
-                        )
                     )
                 }
             },
@@ -176,12 +180,22 @@ fun ScreenStrategy(
 ) {
     val isLoading = controller?.isLoading?.collectAsState()?.value ?: false
     val hasTopBar = topBar != null
-
+    val hostState = remember { SnackbarHostState() }
+    LaunchedEffect(Unit) {
+        controller?.messageToUi?.collect { msg ->
+            if (msg != null) {
+                hostState.showSnackbar(msg)
+            }
+        }
+    }
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val isWideScreen = maxWidth > 600.dp
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
+            snackbarHost = {
+                SnackbarHost(hostState = hostState)
+            },
             topBar = {
                 if (hasTopBar) {
                    topBar()

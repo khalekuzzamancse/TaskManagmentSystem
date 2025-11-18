@@ -70,17 +70,15 @@ abstract class TaskWriteControllerTemplate : ViewModel(), TaskWriteController,
     override suspend fun write(): Boolean {
         try {
             startLoading()
-            Logger.on(tag, "write:${task.value}")
+            Logger.off(tag, "write:${task.value}")
             writeOrThrow()
-            updateMessage("Task created successfully")
             return true
         } catch (e: Throwable) {
-            Logger.on("CustomLog::tag", "write error:$e")
-//            Logger.on(tag, "write error:$e")
-            updateMessage("Something went wrong")
+            onException(e)
             return false
         } finally {
             stopLoading()
         }
     }
+
 }
