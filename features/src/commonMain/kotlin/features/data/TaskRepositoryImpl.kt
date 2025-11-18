@@ -49,7 +49,21 @@ class TaskRepositoryImpl private  constructor(): TaskRepository {
       val entities=  api.filterOrThrow(status?.ordinal, priority?.ordinal,dateRange)
         return entities.map { it._toModel() }
 
+    }
 
+    override suspend fun prioritySortOrThrow(): List<TaskModel> {
+        val entities=  api.byPrioritySortOrThrow()
+        return entities.map { it._toModel() }
+    }
+
+    override suspend fun byStatusSortOrThrow(): List<TaskModel> {
+        val entities=  api.byStatusSortOrThrow()
+        return entities.map { it._toModel() }
+    }
+
+    override suspend fun byDateSortOrThrow(): List<TaskModel> {
+        val entities=  api.byDateSortOrThrow()
+        return entities.map { it._toModel() }
     }
 
     private fun TaskEntity._toModel(): TaskModel {

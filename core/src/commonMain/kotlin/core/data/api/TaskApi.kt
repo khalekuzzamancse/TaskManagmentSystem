@@ -9,8 +9,14 @@ interface TaskApi {
     suspend fun readOrThrow(id: String): TaskEntity
     suspend fun deleteOrThrow(id: String)
     suspend fun readTasksOrThrow():List<TaskEntity>
+
+    suspend fun byPrioritySortOrThrow():List<TaskEntity>
+    suspend fun byStatusSortOrThrow():List<TaskEntity>
+    suspend fun byDateSortOrThrow():List<TaskEntity>
+
     suspend  fun searchOrThrow(query: String): List<TaskEntity>
     suspend fun filterOrThrow(status: Int?, priority: Int?, dateRange: Pair<Long?, Long?>): List<TaskEntity>
+
 }
 data class TaskEntity(
     val title: String,

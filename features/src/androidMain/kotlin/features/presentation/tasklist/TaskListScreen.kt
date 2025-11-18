@@ -16,12 +16,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.Sort
-import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.outlined.FilterAlt
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -34,15 +38,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import core.ui.DateRangeFilter
+import core.ui.DateTimeUtils
+import core.ui.DividerHorizontal
 import core.ui.FilterBottomSheetViewOption
 import core.ui.FilterView
 import core.ui.FilterViewController
@@ -85,20 +93,18 @@ fun TaskListScreen(
     if (showDialog && selectedTask != null) {
         DeleteConfirmationDialog(
             onConfirmDelete = {
-                // Handle task deletion logic
                 selectedTask?.let {
                     viewModel.delete(it.id)
                 }
                 showDialog = false
             },
-            onDismiss = { showDialog = false } // Close dialog if dismissed
+            onDismiss = { showDialog = false }
         )
     }
     if (showBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = {
                 showBottomSheet = false
-
             },
             sheetState = sheetState
         ) {
@@ -124,16 +130,23 @@ fun TaskListScreen(
                 },
                 actions = {
                     IconButtonView(
-                        icon = Icons.Filled.FilterAlt,
+                        icon = Icons.Outlined.Refresh,
+                        tint = MaterialTheme.colorScheme.primary
+                    ) {
+                       viewModel.read()
+                    }
+                    IconButtonView(
+                        icon = Icons.Outlined.FilterAlt,
+                        tint = MaterialTheme.colorScheme.primary
                     ) {
                         showBottomSheet = true
                     }
-                    SpacerHorizontal(8)
-                    IconButtonView(
-                        icon = Icons.AutoMirrored.Filled.Sort
-                    ) { }
-
-
+                    SpacerHorizontal(2)
+                    _SortDropDownMenu(
+                        onPrioritySortRequest = viewModel::sortByPriority,
+                        onDateSortRequest = viewModel::sortByDate,
+                        onStatusSortRequest = viewModel::sortByStatus
+                    )
                 }
             )
         }
@@ -149,7 +162,9 @@ fun TaskListScreen(
 
                 }
             )
-            SpacerVertical(24)
+            SpacerVertical(16)
+            DividerHorizontal()
+            SpacerVertical(8)
             if (tasks.isEmpty() && !isLoading) {
                 NoDataView()
             } else {
@@ -210,6 +225,11 @@ fun TaskScreen(
                     onLongClick(tasks[index])
                 }
             )
+            if(index!=tasks.lastIndex){
+                SpacerVertical(4)
+                DividerHorizontal(modifier = Modifier.padding(horizontal = 16.dp))
+                SpacerVertical(8)
+            }
         }
     }
 }
@@ -218,7 +238,7 @@ fun TaskScreen(
 fun TaskItem(task: TaskModel, onClick: () -> Unit, onLongClick: () -> Unit) {
     Row(
         modifier = Modifier
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
             .fillMaxWidth()
             .combinedClickable(
                 onClick = { onClick() }, // Action for regular click
@@ -226,42 +246,66 @@ fun TaskItem(task: TaskModel, onClick: () -> Unit, onLongClick: () -> Unit) {
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Placeholder for Task Icon (representing the task status)
-        StatusIcon(status = task.status)
 
+        StatusIcon(status = task.priority)
         Spacer(modifier = Modifier.width(12.dp))
-
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = task.title,
-                style = MaterialTheme.typography.titleLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = formatTime(task.createdOn),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
+            Row (
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                if(task.dueDate!=null){
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Timer,
+                            contentDescription = "Due Date",
+                            tint =Color.Gray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        SpacerHorizontal(4)
+                        Text(
+                            text = DateTimeUtils.formatDateInMs(task.dueDate),
+                            fontSize = 15.sp,
+                            color = Color.Gray
+                        )
+                    }
+
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = task.status.label,
+                    color = when(task.status){
+                        StatusModel.TODO->Color(0xFFFF0000)
+                        StatusModel.InProgress->Color(0xFFFFC107)
+                        StatusModel.DONE->Color(0xFF43A047)
+                    },
+                    modifier = Modifier
+                )
+            }
+
+
         }
 
-        // Right Arrow indicating next action
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-            contentDescription = "Next",
-            modifier = Modifier.size(20.dp),
-            tint = Color.Gray
-        )
     }
 }
 
 @Composable
-fun StatusIcon(status: StatusModel) {
-    val color = when (status.ordinal) {
-        1 -> Color.Gray // TODO
-        2 -> Color.Blue // IN_PROGRESS
-        3 -> Color.Green // DONE
-        else -> Color.Black // Default
+fun StatusIcon(status: PriorityModel) {
+    val primary= MaterialTheme.colorScheme.primary
+    val color =when(status){
+        PriorityModel.LOW->primary.copy(alpha = 0.3f)
+        PriorityModel.MEDIUM->primary.copy(alpha = 0.6f)
+        PriorityModel.HIGH->primary.copy(alpha = 0.8f)
     }
 
     Box(
@@ -271,7 +315,11 @@ fun StatusIcon(status: StatusModel) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "T", // Placeholder for icon
+            text = when(status){
+                PriorityModel.LOW->"L"
+                PriorityModel.MEDIUM->"M"
+                PriorityModel.HIGH->"H"
+            },
             color = Color.White,
             fontSize = 20.sp
         )
@@ -283,11 +331,67 @@ fun formatTime(timestamp: Long): String {
     return sdf.format(Date(timestamp))
 }
 
+@Composable
+fun _SortDropDownMenu(
+    onPrioritySortRequest:()-> Unit,
+    onDateSortRequest:()-> Unit,
+    onStatusSortRequest:()-> Unit,
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    Box(
+        modifier = Modifier
+            .padding(16.dp)
+    ) {
+        IconButton(onClick = { expanded = !expanded }) {
+            Icon(
+                Icons.AutoMirrored.Filled.Sort,
+                contentDescription = "Sort",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            Column (
+                modifier = Modifier.padding(8.dp)
+            ){
+                Text(text = "Sort By", fontSize = 16.sp)
+                SpacerVertical(4)
+                DividerHorizontal()
+                DropdownMenuItem(
+                    text = { Text("Priority") },
+                    onClick = {
+                        onPrioritySortRequest()
+                        expanded=false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Status") },
+                    onClick = {
+                        onStatusSortRequest()
+                        expanded=false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Due Date") },
+                    onClick = {
+                        onDateSortRequest()
+                        expanded=false
+                    }
+                )
+            }
+
+
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun TaskScreenPreview() {
-    val tasks = listOf(
-        TaskModel(
+        val task=TaskModel(
             "UI Design",
             "Designing UI for new app",
             1636048511000,
@@ -295,10 +399,13 @@ fun TaskScreenPreview() {
             StatusModel.TODO,
             System.currentTimeMillis(),
             "4"
-        ),
-    )
+        )
 
-    TaskScreen(tasks = tasks, onLongClick = {}, onDetailsRequest = {})
+    TaskItem(
+        task=task,
+        onClick = {},
+        onLongClick = {}
+    )
 
 }
 

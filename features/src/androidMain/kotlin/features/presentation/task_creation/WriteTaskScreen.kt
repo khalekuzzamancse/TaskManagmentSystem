@@ -94,7 +94,10 @@ fun TaskWriteScreen(
             ) {
                 focusManager.clearFocus()
                 scope.launch {
-                   viewModel.write()
+                  val success=  viewModel.write()
+                    if(success){
+                        onBack()
+                    }
                 }
 
             }

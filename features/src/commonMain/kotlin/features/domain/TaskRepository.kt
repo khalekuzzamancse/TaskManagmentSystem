@@ -9,6 +9,9 @@ interface TaskRepository {
     suspend fun searchOrThrow(query: String): List<TaskModel>
     suspend fun deleteOrThrow(id: String)
     suspend fun filterOrThrow(status: StatusModel?, priority: PriorityModel?, dateRange: Pair<Long?, Long?>): List<TaskModel>
+    suspend fun prioritySortOrThrow():List<TaskModel>
+    suspend fun byStatusSortOrThrow():List<TaskModel>
+    suspend fun byDateSortOrThrow():List<TaskModel>
 }
 
 

@@ -49,6 +49,24 @@ class TaskLocalDataSrc(private val dao: TaskDao) : TaskApi{
         }
     }
 
+    override suspend fun byPrioritySortOrThrow(): List<TaskEntity> {
+        //Fake loading
+        delay(1000)
+        return  dao.sortByPriority().map { it._toEntity() }
+    }
+
+    override suspend fun byStatusSortOrThrow(): List<TaskEntity> {
+        //Fake loading
+        delay(1000)
+        return dao.sortByStatus().map { it._toEntity() }
+    }
+
+    override suspend fun byDateSortOrThrow(): List<TaskEntity> {
+        //Fake loading
+        delay(1000)
+        return dao.sortByDate().map { it._toEntity() }
+    }
+
     override suspend fun searchOrThrow(query: String): List<TaskEntity> {
         //Fake loading
         delay(300)
@@ -62,7 +80,8 @@ class TaskLocalDataSrc(private val dao: TaskDao) : TaskApi{
         priority: Int?,
         dateRange: Pair<Long?, Long?>
     ): List<TaskEntity> {
-
+        //Fake loading
+        delay(1000)
         val (start, end) = dateRange
 
         return when {

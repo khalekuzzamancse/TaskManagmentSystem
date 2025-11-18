@@ -41,6 +41,20 @@ interface TaskDao {
 
     @Query("SELECT * FROM TaskSchema WHERE status = :status AND priority = :priority AND dueTimestamp BETWEEN :startDate AND :endDate")
     suspend fun filter(status: Int, priority: Int, startDate: String, endDate: String): List<TaskSchema>
+
+    // Sort
+    @Query("SELECT * FROM TaskSchema ORDER BY priority DESC")
+    suspend fun sortByPriority(): List<TaskSchema>
+    // Sort tasks by status
+    @Query("SELECT * FROM TaskSchema ORDER BY status DESC")
+    suspend fun sortByStatus(): List<TaskSchema>
+
+    // Sort tasks by created date (createdOn)
+    @Query("SELECT * FROM TaskSchema ORDER BY dueTimestamp DESC")
+    suspend fun sortByDate(): List<TaskSchema>
+
+
+
 }
 
 /**
