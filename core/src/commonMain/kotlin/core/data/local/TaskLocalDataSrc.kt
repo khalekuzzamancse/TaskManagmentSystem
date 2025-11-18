@@ -6,6 +6,7 @@ import core.data.api.TaskEntity
 import core.data.room.TaskDao
 import core.data.room.TaskSchema
 import core.language.CustomException
+import core.language.toDateString
 import kotlinx.coroutines.delay
 
 class TaskLocalDataSrc(private val dao: TaskDao) : TaskApi{
@@ -56,11 +57,76 @@ class TaskLocalDataSrc(private val dao: TaskDao) : TaskApi{
         }
     }
 
+    override suspend fun filterOrThrow(
+        status: Int?,
+        priority: Int?,
+        dateRange: Pair<Long?, Long?>
+    ): List<TaskEntity> {
+
+        val (start, end) = dateRange
+
+        return when {
+            // Case 1: Only status is provided (priority and date are null)
+            status != null && priority == null && start == null && end == null -> {
+                val tasks = dao.filterStatus(status)
+
+                tasks.map { it._toEntity() }
+            }
+
+            // Case 2: Only priority is provided (status and date are null)
+            priority != null && status == null && start == null && end == null -> {
+                val tasks = dao.filterPriority(priority)
+
+                tasks.map { it._toEntity() }
+            }
+
+            // Case 3: Only start date is provided (priority and status are null)
+            start != null && priority == null && status == null && end == null -> {
+                val tasks = dao.filterDate(start.toDateString())
+
+                tasks.map { it._toEntity() }
+            }
+
+            // Case 4: Start and end date are provided (priority and status are null)
+            start != null && end != null && priority == null && status == null -> {
+                val tasks = dao.filterDate(start.toDateString(), end.toDateString())
+
+                tasks.map { it._toEntity() }
+            }
+
+            // Case 5: status and priority are provided (date is null)
+            status != null && priority != null && start == null && end == null -> {
+                val tasks = dao.filter(status, priority)
+
+                tasks.map { it._toEntity() }
+            }
+
+            // Case 6: status, priority, and date are provided
+            status != null && priority != null && start != null && end == null -> {
+                val tasks = dao.filter(status, priority, start.toDateString())
+                tasks.map { it._toEntity() }
+            }
+
+            // Case 7: status, priority, and date range are provided
+            status != null && priority != null && start != null && end != null -> {
+                val tasks = dao.filter(status, priority, start.toDateString(), end.toDateString())
+                tasks.map { it._toEntity() }
+            }
+
+            // Case 8: If no filters are provided, return all tasks
+            else -> {
+                val tasks = dao.readTasksOrThrow()
+                tasks.map { it._toEntity() }
+            }
+        }
+    }
+
+
     private fun TaskSchema._toEntity(): TaskEntity{
         return TaskEntity(
             title = this.title,
             description = this.description,
-            dueDate = this.dueDate,
+            dueDate = this.dueTimestamp,
             priority = this.priority,
             status = this.status,
             createdOn = this.createdOn)
@@ -69,7 +135,7 @@ class TaskLocalDataSrc(private val dao: TaskDao) : TaskApi{
         return TaskSchema(
             title = this.title,
             description = this.description,
-            dueDate = this.dueDate,
+            dueTimestamp = this.dueDate,
             priority = this.priority,
             status = this.status,
             createdOn = this.createdOn,

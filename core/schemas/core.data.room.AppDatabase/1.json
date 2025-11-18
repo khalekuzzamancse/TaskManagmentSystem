@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "7acefefe3b75aac9600daf405e56cffc",
+    "identityHash": "949edc2c65423f987b3f38ea22031727",
     "entities": [
       {
         "tableName": "TaskSchema",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`createdOn` INTEGER NOT NULL, `title` TEXT NOT NULL, `description` TEXT, `dueDate` INTEGER, `priority` INTEGER NOT NULL, `status` INTEGER NOT NULL, PRIMARY KEY(`createdOn`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`createdOn` INTEGER NOT NULL, `title` TEXT NOT NULL, `description` TEXT, `dueTimestamp` INTEGER, `priority` INTEGER NOT NULL, `status` INTEGER NOT NULL, `dueDate` TEXT, PRIMARY KEY(`createdOn`))",
         "fields": [
           {
             "fieldPath": "createdOn",
@@ -26,8 +26,8 @@
             "affinity": "TEXT"
           },
           {
-            "fieldPath": "dueDate",
-            "columnName": "dueDate",
+            "fieldPath": "dueTimestamp",
+            "columnName": "dueTimestamp",
             "affinity": "INTEGER"
           },
           {
@@ -41,6 +41,11 @@
             "columnName": "status",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "dueDate",
+            "columnName": "dueDate",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -53,7 +58,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7acefefe3b75aac9600daf405e56cffc')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '949edc2c65423f987b3f38ea22031727')"
     ]
   }
 }

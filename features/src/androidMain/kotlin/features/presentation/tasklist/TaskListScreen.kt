@@ -1,3 +1,4 @@
+@file:Suppress("ComposableNaming")
 package features.presentation.tasklist
 
 import androidx.compose.foundation.background
@@ -41,7 +42,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import core.ui.FilterBottomSheetPreview
+import core.ui.DateRangeFilter
+import core.ui.FilterBottomSheetViewOption
+import core.ui.FilterView
+import core.ui.FilterViewController
 import core.ui.IconButtonView
 import core.ui.NoDataView
 import core.ui.ScreenStrategy
@@ -49,9 +53,11 @@ import core.ui.SearchBar
 import core.ui.SpacerHorizontal
 import core.ui.SpacerVertical
 import core.ui.TextHeading2
+import core.ui.TextHeading3
 import features.domain.PriorityModel
 import features.domain.StatusModel
 import features.domain.TaskModel
+import features.presentation_logic.TaskListController
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -96,7 +102,12 @@ fun TaskListScreen(
             },
             sheetState = sheetState
         ) {
-            FilterBottomSheetPreview()
+            _FilterView(
+                taskController = viewModel,
+                onApplyRequested = {
+                    showBottomSheet=false
+                }
+            )
         }
     }
     ScreenStrategy(
@@ -123,13 +134,12 @@ fun TaskListScreen(
                     ) { }
 
 
-
                 }
             )
         }
 
     ) { modifier ->
-        Column {
+        Column(modifier=modifier) {
             SearchBar(
                 modifier = modifier
                     .fillMaxWidth()
@@ -287,6 +297,65 @@ fun TaskScreenPreview() {
             "4"
         ),
     )
+
     TaskScreen(tasks = tasks, onLongClick = {}, onDetailsRequest = {})
 
+}
+
+@Composable
+fun _FilterView(
+    modifier: Modifier = Modifier,
+    taskController: TaskListController,
+    onApplyRequested: () -> Unit,
+) {
+    val controller = remember {
+        FilterViewController.create(
+            listOf(
+                FilterBottomSheetViewOption(
+                    groupName = "Status",
+                    options = StatusModel.entries.map { it.label },
+                ),
+                FilterBottomSheetViewOption(
+                    groupName = "Priority",
+                    options = PriorityModel.entries.map { it.label },
+                ),
+            )
+        )
+    }
+    Column(modifier = modifier) {
+        var selectedRange by remember {
+            mutableStateOf<Pair<Long?, Long?>>(null to null)
+        }
+        FilterView(
+            modifier = Modifier,
+            controller = controller,
+            onResetRequest = {
+                controller.reset()
+                selectedRange = (null to null)
+            },
+            onApplyRequest = {
+
+                taskController.filter(
+                    status = controller.selectedByGroup.value["Status"],
+                    priority = controller.selectedByGroup.value["Priority"],
+                    dateRange = selectedRange
+                )
+                onApplyRequested()
+            },
+            groupText = { modifier, group ->
+                TextHeading3(text = group, modifier = modifier.padding(start = 16.dp))
+            }
+        )
+        SpacerVertical(16)
+        Column {
+            TextHeading3(text = "Date Range", modifier = Modifier.padding(start = 16.dp))
+            DateRangeFilter(
+                modifier = Modifier.padding(start = 16.dp),
+                selectedRange = selectedRange,
+                onSelection = {
+                    selectedRange = it
+                }
+            )
+        }
+    }
 }

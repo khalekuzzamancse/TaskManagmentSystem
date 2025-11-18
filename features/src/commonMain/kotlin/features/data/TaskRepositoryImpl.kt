@@ -9,7 +9,11 @@ import features.domain.StatusModel
 import features.domain.TaskModel
 import features.domain.TaskRepository
 
-class TaskRepositoryImpl : TaskRepository {
+class TaskRepositoryImpl private  constructor(): TaskRepository {
+    companion object {
+        fun create():TaskRepository=TaskRepositoryImpl()
+    }
+
     private val api = ApiFactory.createTaskApiOrThrow()
     override suspend fun createOrThrow(model: TaskModel) {
         api.createOrThrow(model._toEntity())
@@ -36,6 +40,18 @@ class TaskRepositoryImpl : TaskRepository {
     override suspend fun deleteOrThrow(id: String) {
         api.deleteOrThrow(id)
     }
+
+    override suspend fun filterOrThrow(
+        status: StatusModel?,
+        priority: PriorityModel?,
+        dateRange: Pair<Long?, Long?>
+    ) : List<TaskModel> {
+      val entities=  api.filterOrThrow(status?.ordinal, priority?.ordinal,dateRange)
+        return entities.map { it._toModel() }
+
+
+    }
+
     private fun TaskEntity._toModel(): TaskModel {
         return TaskModel(
             title = this.title,

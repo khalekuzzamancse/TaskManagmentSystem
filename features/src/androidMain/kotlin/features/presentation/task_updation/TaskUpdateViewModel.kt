@@ -6,7 +6,7 @@ import features.presentation.task_creation.TaskWriteControllerTemplate
 import kotlinx.coroutines.launch
 
 class TaskUpdateViewModel(private val id: String) : TaskWriteControllerTemplate(){
-    private val repository = TaskRepositoryImpl()
+    private val repository = TaskRepositoryImpl.create()
      val tag = "TaskUpdateViewModel"
     init {
         viewModelScope.launch {

@@ -14,6 +14,7 @@ kotlin {
             dependencies {
                 implementation(libs.androidx.room.runtime)
                 implementation(libs.androidx.sqlite.bundled)
+                implementation(libs.kotlinx.datetime)
             }
         }
         val androidMain by getting{

@@ -8,6 +8,7 @@ interface TaskRepository {
     suspend fun updateOrThrow(model: TaskModel)
     suspend fun searchOrThrow(query: String): List<TaskModel>
     suspend fun deleteOrThrow(id: String)
+    suspend fun filterOrThrow(status: StatusModel?, priority: PriorityModel?, dateRange: Pair<Long?, Long?>): List<TaskModel>
 }
 
 

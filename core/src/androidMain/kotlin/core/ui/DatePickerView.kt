@@ -28,7 +28,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -38,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.concurrent.TimeUnit
@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun DatePickerView(
     modifier: Modifier = Modifier,
-    initial: Long?=null,
+    initial: Long? = null,
     onDateSelected: (Long?) -> Unit,
 ) {
 
@@ -54,29 +54,28 @@ fun DatePickerView(
         initialSelectedDateMillis = initial
     )
     var selected by rememberSaveable(initial) { mutableStateOf(initial) }
-    val snapshot= selected
+    val snapshot = selected
     var showDialog by rememberSaveable { mutableStateOf(false) }
-    TextFieldView (
+    TextFieldView(
         modifier = modifier.fillMaxWidth(),
         value = if (snapshot == null) "" else DateTimeUtils.formatDateInMs(snapshot),
         onValueChange = {},
-        placeholder =  if (snapshot == null) "Select date" else null,
+        placeholder = if (snapshot == null) "Select date" else null,
         readOnly = true,
         trailingIcon = {
-            if (selected==null){
+            if (selected == null) {
                 Icon(
                     imageVector = Icons.Default.CalendarMonth,
                     contentDescription = "Pick date",
                     tint = MaterialTheme.colorScheme.primary,
-                  modifier = Modifier.clickable { showDialog = true }
+                    modifier = Modifier.clickable { showDialog = true }
                 )
-            }
-            else{
+            } else {
                 IconButtonView(
                     icon = Icons.Default.Cancel,
                     tint = Color.Red
                 ) {
-                    selected=null
+                    selected = null
                     onDateSelected(null)
                 }
             }
@@ -108,87 +107,93 @@ fun DatePickerView(
                 }
             }
         ) {
-            DatePicker(state = datePickerState,)
+            DatePicker(state = datePickerState)
         }
     }
 
 }
 
+@Preview
+@Composable
+private fun DateRangeFilterPreview() {
+    val today = rememberSaveable { System.currentTimeMillis() }
+    val sevenDaysAgo = rememberSaveable { today - TimeUnit.DAYS.toMillis(7) }
+    var selectedRange by rememberSaveable() {
+        mutableStateOf<Pair<Long?, Long?>>(sevenDaysAgo to today)
+    }
+    Column {
+        TextHeading3(text = "Date Range")
+        DateRangeFilter(
+            modifier = Modifier,
+            selectedRange = selectedRange,
+            onSelection = {}
+        )
+    }
+
+
+}
 
 @Composable
 fun DateRangeFilter(
     modifier: Modifier = Modifier,
-    onSelection: (Pair<Long, Long>) -> Unit,
-    onClear: () -> Unit
+    selectedRange: Pair<Long?, Long?>,
+    onSelection: (Pair<Long?, Long?>) -> Unit
 ) {
     var showDialog by rememberSaveable { mutableStateOf(false) }
-    val today = rememberSaveable { System.currentTimeMillis() }
-    val sevenDaysAgo = rememberSaveable { today - TimeUnit.DAYS.toMillis(7) }
-    var selectedRange by rememberSaveable {
-        mutableStateOf<Pair<Long?, Long?>>(sevenDaysAgo to today)
-    }
-    val selected=selectedRange.first!=null&&selectedRange.second!=null
-    val start=selectedRange.first
-    val end=selectedRange.second
 
-    LaunchedEffect(selectedRange) {
-        val start=selectedRange.first
-        val end=selectedRange.second
-        if (start!=null&&end!=null) {
-            onSelection( start to end)
-        }
-    }
+    val start = selectedRange.first
+    val end = selectedRange.second
+    val selected = (start != null) || (end != null)
+
     if (showDialog) {
         DateRangePickerDialog(
             selected = selectedRange,
-            onSelection = { range -> selectedRange = range },
+            onSelection = { range ->
+                val start = range.first
+                val end = range.second
+                onSelection(start to end)
+
+            },
             onDismiss = { showDialog = false }
         )
     }
     Row(
-        modifier=Modifier
-            .padding(horizontal = 16.dp)
+        modifier = modifier
             .fillMaxWidth()
             .padding(12.dp)
-        ,
+            .textFieldBorder(),
         verticalAlignment = Alignment.CenterVertically
 
-    ){
+    ) {
         Row(
             modifier = modifier
-                .clip(  shape = RoundedCornerShape(8.dp))
-                .clickable {
-                    showDialog = true
-                }
-
+                .clip(shape = RoundedCornerShape(8.dp))
                 .weight(1f)
-
-                .padding(8.dp)
-            ,
+                .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
-        ){
-            Icon(
-                imageVector = Icons.Outlined.CalendarToday,
-                contentDescription = "date range filter",
-
-            )
-            SpacerHorizontal(8)
-            if (start!=null&&end!=null){
+        ) {
+            val s =if (start != null) DateTimeUtils.formatDateAs_DD_MMM_YYYY(start) else null
+            val e = if (end != null) DateTimeUtils.formatDateAs_DD_MMM_YYYY(end) else null
+            val range=when{
+                s != null && e != null -> "$s - $e"
+                s != null -> s
+                e != null -> e
+                else -> null
+            }
+            if (range!=null) {
                 Text(
-                    text = "${DateTimeUtils.formatDateAs_DD_MMM_YYYY(start)} → ${DateTimeUtils.formatDateAs_DD_MMM_YYYY(end)}",
+                    text = range,
                     style = MaterialTheme.typography.bodyLarge,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-            }
-
-            else{
-                Row (
+            } else {
+                Row(
                     verticalAlignment = Alignment.CenterVertically
-                ){
+                ) {
                     Text(
-                        text = "Filter by date",
-                        color =Color.Gray,
+                        text = "Select date range",
+                        color = Color.Gray,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -198,16 +203,25 @@ fun DateRangeFilter(
             }
 
         }
-        if(selected){
+        if (selected) {
             SpacerHorizontal(8)
-            _ClearButton(onClick = {
-                selectedRange= null to null
-                onClear()
-            })
+            IconButtonView(
+                icon = Icons.Default.Cancel,
+                tint = Color.Red
+            ) {
+                onSelection(null to null)
+            }
+        } else {
+            IconButtonView(
+                icon = Icons.Outlined.CalendarToday,
+                tint = MaterialTheme.colorScheme.primary
+            ) {
+                showDialog = true
+            }
+
         }
 
     }
-
 
 
 }
@@ -239,9 +253,9 @@ fun DateRangePickerDialog(
         DateRangePicker(
             state = dateRangePickerState,
             title = {
-                Column (
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                ){
+                ) {
                     SpacerVertical(16)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -273,15 +287,17 @@ fun DateRangePickerDialog(
 
                     }
                     SpacerVertical(8)
-                    Text(text = "Select Range",
+                    Text(
+                        text = "Select Range",
                         fontSize = 14.sp,
-                        modifier = Modifier.align(Alignment.CenterHorizontally))
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
                     SpacerVertical(8)
 
                 }
             },
             showModeToggle = false,
-            colors  = DatePickerDefaults.colors(
+            colors = DatePickerDefaults.colors(
                 dayInSelectionRangeContainerColor = Color(0xFF05DBC6), //  background for range
                 selectedDayContainerColor = Color(0xFF0478FF),
                 selectedDayContentColor = Color.White,
@@ -293,15 +309,16 @@ fun DateRangePickerDialog(
         )
     }
 }
+
 @Composable
 fun _ClearButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Row(
-        modifier= modifier
+        modifier = modifier
             .clip(shape = RoundedCornerShape(16.dp))
-            .clickable{
+            .clickable {
                 onClick()
             }
             .height(48.dp)
@@ -310,8 +327,7 @@ fun _ClearButton(
                 color = MaterialTheme.colorScheme.primary,
                 shape = RoundedCornerShape(32.dp)
             )
-            .padding(horizontal = 16.dp)
-        ,
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
